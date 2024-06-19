@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Quiz App</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Exo+2:wght@600&family=Exo:ital,wght@1,600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/Quizz.css" />
+  </head>
+
+  <body>
+    <div id="container">
+      <!-- Start Section -->
+      <div id="start">Start Quiz</div>
+
+      <!-- Guide Section -->
+      <div id="guide">
+        <h2>Quiz Guide</h2>
+        <h4>1. You Have Only 20 Seconds For Each Questions.</h4>
+        <h4>2. Once You Select Your Answer. It Can't Be Undone.</h4>
+        <h4>3. You'll Get Points On The Basis Of Your Correct Answers.</h4>
+        <h4>4. You Can't Exit From The Quiz While You Are Playing.</h4>
+        <h4>
+          5. If you refresh the page at anytime, you will lose all your scores.
+        </h4>
+        <div id="button">
+          <button id="exit">Exit</button>
+          <button id="continue">Continue</button>
+        </div>
+      </div>
+
+      <!-- Quiz Section -->
+      <div id="quiz">
+        <div id="quiz_header">
+          <h5>Charbel's Quiz App</h5>
+          <div id="timer">
+            <h6>Time Left</h6>
+            <h6 id="time">20</h6>
+          </div>
+        </div>
+
+        <!-- Quiz Questions -->
+        <div id="question">
+          <h2 id="questionNo"></h2>
+          <h2 id="questionText"></h2>
+        </div>
+
+        <!-- Quiz Choices -->
+        <div id="optionList">
+          <form id="quizForm" method="POST">
+            <h4 class="choice_que">
+              <input type="radio" name="answer" value="0" id="option1" /><label
+                id="lbl1"
+                for="option1"
+              ></label>
+            </h4>
+            <h4 class="choice_que">
+              <input type="radio" name="answer" value="1" id="option2" /><label
+                id="lbl2"
+                for="option2"
+              ></label>
+            </h4>
+            <h4 class="choice_que">
+              <input type="radio" name="answer" value="2" id="option3" /><label
+                id="lbl3"
+                for="option3"
+              ></label>
+            </h4>
+            <h4 class="choice_que">
+              <input type="radio" name="answer" value="3" id="option4" /><label
+                id="lbl4"
+                for="option4"
+              ></label>
+            </h4>
+            <input type="hidden" name="question_number" id="question_number" />
+            <hr />
+            <button type="submit" id="check_answer">Check Answer</button>
+          </form>
+        </div>
+
+        <!-- Answers Section-->
+        <div id="answersSection">
+          <h3 id="total_correct">1 Of 10 Questions</h3>
+          <h3 id="next_question">Next</h3>
+        </div>
+      </div>
+
+      <!-- Result Section -->
+      <div id="result" style="display: none">
+        <!-- <img
+          src="images/congratulations.webp"
+          display="flex"
+          width="400px"
+          height="250px"
+        /> -->
+        <img src="" display="flex" width="400px" height="250px" id="img" />
+
+        <i class="fas fa-trophy"></i>
+        <h6>You Completed The Quiz</h6>
+        <h6 id="points">You Got 4 Out Of 10</h6>
+        <button id="quit">Quit Quiz</button>
+        <button id="startAgain">Start Again</button>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="questions.js"></script>
+    <script>
+      // check score if more than 7 show specficic image
+      function checkScore(correct_count) {
+        let imgPath = "images/sad emojie.webp";
+        let img = document.getElementById("img");
+
+        if (correct_count >= 6) {
+          imgPath = "images/congratulations.webp";
+        }
+        img.src = imgPath;
+      }
+      // Start Section
+      let start = document.querySelector("#start");
+
+      // Guide Section
+      let guide = document.querySelector("#guide");
+      let exit = document.querySelector("#exit");
+      let continueBtn = document.querySelector("#continue");
+
+      // Quiz Section
+      let quiz = document.querySelector("#quiz");
+      let time = document.querySelector("#time");
+
+      // question Section
+      let questionNo = document.querySelector("#questionNo");
+      let questionText = document.querySelector("#questionText");
+
+      // Multiple Choices Of Questions
+      let option1 = document.querySelector("#option1");
+      let option2 = document.querySelector("#option2");
+      let option3 = document.querySelector("#option3");
+      let option4 = document.querySelector("#option4");
+
+      // correct and next Button
+      let total_correct = document.querySelector("#total_correct");
+      let next_question = document.querySelector("#next_question");
+
+      // Result Section
+      let result = document.querySelector("#result");
+      let points = document.querySelector("#points");
+      let quit = document.querySelector("#quit");
+      let startAgain = document.querySelector("#startAgain");
+
+      // Get All 'H4' From Quiz Section (MCQS)
+      let choice_que = document.querySelectorAll(".choice_que");
+      let index = 0;
+      let timer = 20;
+      let interval = 0;
+      let correct = 0;
+
+      let loadData = () => {
+        questionNo.innerText = index + 1 + ". ";
+        questionText.innerText = MCQS[index].question;
+        document.querySelector("#lbl1").innerText = MCQS[index].choice1;
+        document.querySelector("#lbl2").innerText = MCQS[index].choice2;
+        document.querySelector("#lbl3").innerText = MCQS[index].choice3;
+        document.querySelector("#lbl4").innerText = MCQS[index].choice4;
+        document.querySelector("#question_number").value = index;
+        timer = 20;
+      };
+
+      // Event listener for 'Start' button
+      start.addEventListener("click", () => {
+        start.style.display = "none";
+        guide.style.display = "block";
+      });
+
+      // Event listener for 'Exit' button
+      exit.addEventListener("click", () => {
+        start.style.display = "block";
+        guide.style.display = "none";
+      });
+
+      // Function to count down timer
+      let countDown = () => {
+        if (timer === 0) {
+          clearInterval(interval);
+          next_question.click();
+        } else {
+          timer--;
+          time.innerText = timer;
+        }
+      };
+
+      // Event listener for 'Continue' button
+      continueBtn.addEventListener("click", () => {
+        quiz.style.display = "block";
+        guide.style.display = "none";
+        interval = setInterval(countDown, 1000);
+        loadData();
+        choice_que.forEach((removeActive) => {
+          removeActive.classList.remove("active");
+        });
+        total_correct.innerHTML = `${index + 1} Out Of ${
+          MCQS.length
+        } Questions`;
+      });
+
+      // Event listener for choice selection
+      choice_que.forEach((choices, choiceNo) => {
+        choices.addEventListener("click", () => {
+          choices.classList.add("active");
+          choices.checked = true;
+          clearInterval(interval);
+          for (i = 0; i <= 3; i++) {
+            choice_que[i].classList.add("disabled");
+          }
+        });
+      });
+
+      // Event listener for 'Next' button
+      next_question.addEventListener("click", () => {
+        if (index !== MCQS.length - 1) {
+          index++;
+          choice_que.forEach((removeActive) => {
+            removeActive.classList.remove("active");
+            removeActive.classList.remove("disabled");
+
+            document.getElementById("check_answer").disabled = false;
+            option1.checked = false;
+            option2.checked = false;
+            option3.checked = false;
+            option4.checked = false;
+
+            removeActive.classList.remove("wrong_answer");
+            removeActive.classList.remove("correct_answer");
+          });
+          loadData();
+          total_correct.style.display = "block";
+          total_correct.innerHTML = `${index + 1} Out Of ${
+            MCQS.length
+          } Questions`;
+          clearInterval(interval);
+          interval = setInterval(countDown, 1000);
+        } else {
+          index = 0;
+          clearInterval(interval);
+          checkScore(correct);
+          quiz.style.display = "none";
+          points.innerHTML = `You Got ${correct} Out Of ${MCQS.length}`;
+          result.style.display = "block";
+        }
+      });
+
+      // Event listener for 'Quit' button
+      quit.addEventListener("click", () => {
+        index = 0;
+        timer = 20;
+        interval = 0;
+        correct = 0;
+
+        start.style.display = "block";
+        result.style.display = "none";
+      });
+
+      // Event listener for 'Start Again' button
+      startAgain.addEventListener("click", () => {
+        index = 0;
+        timer = 20;
+        interval = 0;
+        correct = 0;
+
+        guide.style.display = "block";
+        result.style.display = "none";
+      });
+
+      // Event listener for form submission
+      document
+        .querySelector("#quizForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          document.getElementById("check_answer").disabled = true;
+
+          // $(this).serialize()
+          let formData = new FormData(this);
+          let answer = formData.get("answer");
+          let question_number = formData.get("question_number");
+          $.ajax({
+            url: "calculate_results.php",
+            method: "POST",
+            data: {
+              answer: answer,
+              question_number: question_number,
+            },
+            success: function (response) {
+              correct += response.correct_count;
+              correct_answer = response.correct_answer;
+              answer = response.answer;
+              choice_que.forEach((choice) => {
+                const radioInput = choice.querySelector('input[type="radio"]');
+                if (radioInput.value == correct_answer) {
+                  choice.classList.add("correct_answer");
+                } else {
+                  choice.classList.add("wrong_answer");
+                }
+              });
+            },
+            error: function (xhr, status, error) {
+              console.error(error);
+            },
+          });
+        });
+    </script>
+  </body>
+</html>
